@@ -1,7 +1,7 @@
 letsencrypt:
   pkg.installed:
     - pkgs:
-      - python-cffi
+      - libffi-dev
   virtualenv.managed:
     - name: /opt/letsencrypt
   pip.installed:
