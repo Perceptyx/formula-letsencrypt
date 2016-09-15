@@ -1,0 +1,4 @@
+# vim: ft=yaml:sw=2:ts=2:expandtab
+
+letsencrypt: {}
+
