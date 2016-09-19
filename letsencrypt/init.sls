@@ -7,7 +7,10 @@ letsencrypt_packages:
   pkg.installed:
     - pkgs:
       - libffi-dev
+      # We need python-pip to be able to use to pip.installed saltstack state module
       - python-pip
+      # We need lsof to solve the chicken-egg problem (see below) (todo: or use netstat, which is installed everywhere by default)
+      - lsof
 
 # Create a virtualenv for letsencrypt
 letsencrypt_virtualenv_/opt/letsencrypt:
@@ -52,7 +55,14 @@ letsencrypt_config:
 # domain for five times within a week or so
 letsencrypt_initial-obtain_{{ domain['name'] }}:
   cmd.run:
+    # Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
+    # lsof -i :80 will return exit status 0 if sth is listening and != zero if not
+    {% set port_80_status = salt['cmd.run']('lsof -i :80 2>&1 > /dev/null; echo $?') %}
+    {% if port_80_status != '0' %}
+    - name: /opt/letsencrypt/bin/letsencrypt certonly --standalone -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+    {% else %}
     - name: /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['config']['webroot-path'] }} -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+    {% endif %}
     - creates: /etc/letsencrypt/live/{{ domain['name'] }}/fullchain.pem
     - require:
       - pip: letsencrypt_pip-package
@@ -61,6 +71,7 @@ letsencrypt_initial-obtain_{{ domain['name'] }}:
 
 
 # Create a cronjob to renew all present domains every 60 days at the first of the month at 0:25 hours
+# For the cronjob we assume that we have a webroot
 letsencrypt_cronjob:
   cron.present:
     - name: /opt/letsencrypt/bin/letsencrypt certonly --webroot --renew -w {{ letsencrypt['config']['webroot-path'] }}{% for d in letsencrypt['domains'] %} -d {{ d['name'] }}{% endfor %};{% for d in letsencrypt['domains'] %}{% if d.get('hook', False) %} {{ d['hook'] }};{% endif %}{% endfor %}
