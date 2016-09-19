@@ -63,19 +63,3 @@ letsencrypt:
 ```
 
 It will then process the domains in order and execute the hook at last.
-
-
-# Chicken egg problem
-
-Currently, you cant run your nginx formula as the certificates are not present yet.
-You can also not run your letsencrypt formula, as there is no nginx to service files with.
-
-=> Create some fancyness in the formula that detects if there is a webserver running like
-
-```
-{% set lsof = salt['cmd.run']('lsof -i :80') %}
-{% if not lsof %}
-letsencrypt_get-certificate_temporary_webserver:
-  cmd.run:
-    - name: and so on..
-```
