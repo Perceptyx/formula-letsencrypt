@@ -1,4 +1,32 @@
 # vim: ft=yaml:sw=2:ts=2:expandtab
 
-letsencrypt: {}
+letsencrypt:
+
+  domains:
+      # Domain name to request certificate for
+    - name: mail.example.com
+      # Sometimes after requesting a new certificate, it is required to execute some further bash commands,
+      # like concatinating crt and key for courier-imapd and so on.
+      # Also, webservers like nginx will only pick up the new certificate files if you issue a `service nginx reload`
+      # These hooks will be executed directly after the certificate is renewed
+      hook: 'cat /etc/letsencrypt/live/mail.example.com/{privkey.pem,fullchain.crt} > /etc/courier/ssl/combined.pem && service courier-imapd restart'
+
+    # If you have 5 domains and only at the end of the renewal process you want to reload nginx once
+    - name: domain1.example.com
+    - name: domain2.example.com
+    - name: domain3.example.com
+    - name: domain4.example.com
+    - name: domain5.example.com
+      hook: service nginx reload
+
+
+  # Will be put into /etc/letsencrypt/cli.ini
+  # TODO - why even use a config file: https://community.letsencrypt.org/t/multiple-domains-in-config-file-cli-ini/3757 ?
+  config:
+    server: https://acme-v01.api.letsencrypt.org/directory
+    email: monitoring+blunix@blunix.org
+    agree-tos: True
+    renew-by-default: True
+    authenticator: webroot
+    webroot-path: /var/www/letsencrypt
 
