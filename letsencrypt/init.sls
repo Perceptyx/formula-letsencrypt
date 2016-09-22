@@ -39,9 +39,11 @@ letsencrypt_initial-obtain_{{ domain['name'] }}:
     # lsof -i :80 will return exit status 0 if sth is listening and != zero if not
     {% set port_80_status = salt['cmd.run']('lsof -i :80 2>&1 > /dev/null; echo $?') %}
     {% if port_80_status != '0' %}
-    - name: /opt/letsencrypt/bin/letsencrypt certonly --standalone -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+    - name: /opt/letsencrypt/bin/letsencrypt certonly {{ letsencrypt['arguments'] | join(' ') }} --standalone -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+
     {% else %}
-    - name: /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['config']['webroot-path'] }} -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+    - name: /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d {{ domain['name'] }}; {{ domain.get('hook', '') }}
+
     {% endif %}
     - creates: /etc/letsencrypt/live/{{ domain['name'] }}/fullchain.pem
     - require:
@@ -54,7 +56,7 @@ letsencrypt_initial-obtain_{{ domain['name'] }}:
 # For the cronjob we assume that we have a webroot
 letsencrypt_cronjob:
   cron.present:
-    - name: /opt/letsencrypt/bin/letsencrypt certonly --webroot --renew -w {{ letsencrypt['config']['webroot-path'] }}{% for d in letsencrypt['domains'] %} -d {{ d['name'] }}{% endfor %};{% for d in letsencrypt['domains'] %}{% if d.get('hook', False) %} {{ d['hook'] }};{% endif %}{% endfor %}
+    - name: /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['arguments'] | join(' ') }} --webroot --renew {% for d in letsencrypt['domains'] %} -w {{ d['webroot'] }} -d {{ d['name'] }}{% endfor %};{% for d in letsencrypt['domains'] %}{% if d.get('hook', False) %} {{ d['hook'] }};{% endif %}{% endfor %}
     - identifier: Renew all letsencrypt certificates
     - month: '1,3,5,7,9,11'
     - daymonth: 1
