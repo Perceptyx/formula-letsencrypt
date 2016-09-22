@@ -1,32 +1,54 @@
-# vim: ft=yaml:sw=2:ts=2:expandtab
+# Rate Limitations: You can create a maximum of 500 Registrations per IP Address per 3 hours. Hitting this rate limit is very rare.
+# - You can have up to 100 names per certificate
+# - You can create a maximum of 500 Registrations per IP Address per 3 hours
+# - We also have a Duplicate Certificate limit of 5 certificates per week. A certificate is considered a duplicate of an earlier
+#   certificate if they contain the exact same set of hostnames, ignoring capitalization and ordering of hostnames. For instance,
+#   if you requested a certificate for the names [www.example.com, example.com], you could request four more certificates for 
+#   [www.example.com, example.com] during the week. If you changed the set of names by adding [blog.example.com], you would be
+#   able to request additional certificates.
 
 letsencrypt:
 
+  # Specification of list of domains to requests certificates for
   domains:
-      # Domain name to request certificate for
-    - name: mail.example.com
-      # Sometimes after requesting a new certificate, it is required to execute some further bash commands,
-      # like concatinating crt and key for courier-imapd and so on.
-      # Also, webservers like nginx will only pick up the new certificate files if you issue a `service nginx reload`
-      # These hooks will be executed directly after the certificate is renewed
-      hook: 'cat /etc/letsencrypt/live/mail.example.com/{privkey.pem,fullchain.crt} > /etc/courier/ssl/combined.pem && service courier-imapd restart'
 
-    # If you have 5 domains and only at the end of the renewal process you want to reload nginx once
-    - name: domain1.example.com
-    - name: domain2.example.com
-    - name: domain3.example.com
-    - name: domain4.example.com
-    - name: domain5.example.com
-      hook: service nginx reload
+    # Each list item will create /etc/letsencrypt/live/{ list_item['names'][0] }
+    # If more than one domain is given in the list of names, the additional domains will be subject alternative names
+    - names:
+        # First domain - will determine that the certfificate is to be placed in /etc/letsencrypt/live/mail.example.org
+        - mail.example.org
+        # Optional additional domains (Subject Alternative Names)
+        - www.example.org
+        - test.example.org
+      # Webroot to use - this will only be used if something is listening on port 80
+      webroot: /var/www/letsencrypt
+      # This shell command will be executed after the certificate has been requested or renewed
+      hook: echo testhook
 
 
-  # Will be put into /etc/letsencrypt/cli.ini
-  # TODO - why even use a config file: https://community.letsencrypt.org/t/multiple-domains-in-config-file-cli-ini/3757 ?
-  config:
-    server: https://acme-v01.api.letsencrypt.org/directory
-    email: monitoring+blunix@blunix.org
-    agree-tos: True
-    renew-by-default: True
-    authenticator: webroot
-    webroot-path: /var/www/letsencrypt
+{% if 'ftp' in grains['id'] %}
+    - names:
+        - ftp.example.org
+      hook: 'service vsftpd restart'
+      # IF THERE IS NO SERVICE RUNNING on pillar:letsencrypt:check_port ON THE MINION !!!
+      # This can be omitted. However if there is, the formula will fail!
+      # (Because there is no default value for webroot and we need it if there is sth running on check_port)
+      # So if your server really just does ftp, you can omit this
+      #webroot: /var/www/ftp.example.org
+{% endif %}
 
+
+  # Arguments passed to the certbot executable
+  # Reference: https://certbot.eff.org/docs/using.html#command-line
+  arguments:
+    - 'certonly'
+    - '--agree-tos'
+    - '--non-interactive'
+    - '--renew-by-default'
+    - '--no-self-upgrade'
+    - '--http-01-port 80'
+
+
+  # This formula checks a port before it determines wether to use --webroot or --standalone
+  # (If no webserver is running, we cant use --webroot)
+  check_port: 80
