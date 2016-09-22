@@ -34,13 +34,26 @@ letsencrypt:
       # This can be omitted. However if there is, the formula will fail!
       # (Because there is no default value for webroot and we need it if there is sth running on check_port)
       # So if your server really just does ftp, you can omit this
+      # NOTE if you do not define webroot, the cronjob will use standalone!
       #webroot: /var/www/ftp.example.org
 {% endif %}
 
 
   # Arguments passed to the certbot executable
   # Reference: https://certbot.eff.org/docs/using.html#command-line
-  arguments:
+  standalone_arguments:
+    - 'certonly'
+    - '--agree-tos'
+    - '--non-interactive'
+    - '--renew-by-default'
+    - '--no-self-upgrade'
+    # For some reason with --standalone I get:
+    # Too many flags setting configurators/installers/authenticators 'webroot' -> 'standalone'
+    #- '--standalone'
+    # It will use standalone by default, so never mind..
+
+  # --webroot is set by the formula, dont add it here!
+  webroot_arguments:
     - 'certonly'
     - '--agree-tos'
     - '--non-interactive'
