@@ -7,6 +7,8 @@ letsencrypt_packages:
       - python-pip
       # We need lsof to solve the chicken-egg problem (see below) (todo: or use netstat, which is installed everywhere by default)
       - lsof
+      # We need those packages to install the pip package certbot
+      - libssl-dev
 
 # Create a virtualenv for letsencrypt
 letsencrypt_virtualenv_/opt/letsencrypt:
