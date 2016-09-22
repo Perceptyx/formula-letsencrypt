@@ -45,11 +45,21 @@ letsencrypt_initial-request_{{ domain['names'][0] }}:
     # lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
     {% set check_port_status = salt['cmd.run']('lsof -i ' + letsencrypt['check_port'] | string + ':80 2>&1 > /dev/null; echo $?') %}
 
+    # Check the exit status of lsof - if its not 0, there is no service listening on { letsencrypt['check_port'] }
     {% if check_port_status != '0' %}
-    - name: /opt/letsencrypt/bin/letsencrypt certonly {{ letsencrypt['arguments'] | join(' ') }} --standalone -d '{{ domain['names'] | join(',')}}'; {{ domain.get('hook', '') }}
+    # Make sure to remove the list file if the command fails so the next salt run will execute certbot again
+    - name: |
+        exec 2>&1
+        /opt/letsencrypt/bin/letsencrypt certonly {{ letsencrypt['arguments'] | join(' ') }} --standalone -d '{{ domain['names'] | join(',')}}' \
+        || rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
+        {{ domain.get('hook', '') }}
 
     {% else %}
-    - name: /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d '{{ domain['names'] | join(',') }}'; {{ domain.get('hook', '') }}
+    - name: |
+        exec 2>&1
+        /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d '{{ domain['names'] | join(',') }}' \
+        || rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
+        {{ domain.get('hook', '') }}
 
     {% endif %}
 
