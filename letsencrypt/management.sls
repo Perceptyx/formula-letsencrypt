@@ -43,9 +43,9 @@ letsencrypt_initial-request_{{ domain['names'][0] }}:
 
     # Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
     # lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
-    {% set port_80_status = salt['cmd.run']('lsof -i ' + letsencrypt['check_port'] | string + ':80 2>&1 > /dev/null; echo $?') %}
+    {% set check_port_status = salt['cmd.run']('lsof -i ' + letsencrypt['check_port'] | string + ':80 2>&1 > /dev/null; echo $?') %}
 
-    {% if port_80_status != '0' %}
+    {% if check_port_status != '0' %}
     - name: /opt/letsencrypt/bin/letsencrypt certonly {{ letsencrypt['arguments'] | join(' ') }} --standalone -d '{{ domain['names'] | join(',')}}'; {{ domain.get('hook', '') }}
 
     {% else %}
