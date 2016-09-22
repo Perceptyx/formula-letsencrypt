@@ -40,6 +40,9 @@ letsencrypt_salt_change-notice-file_{{ domain['names'][0] }}:
 #}
 letsencrypt_initial-request_{{ domain['names'][0] }}:
   cmd.wait:
+    - user: root
+    - group: root
+    - shell: /bin/bash
 
     # Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
     # lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
@@ -50,16 +53,16 @@ letsencrypt_initial-request_{{ domain['names'][0] }}:
     # Make sure to remove the list file if the command fails so the next salt run will execute certbot again
     - name: |
         exec 2>&1
-        /opt/letsencrypt/bin/letsencrypt certonly {{ letsencrypt['arguments'] | join(' ') }} --standalone -d '{{ domain['names'] | join(',')}}' \
-        || rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
-        {{ domain.get('hook', '') }}
+        /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['standalone_arguments'] | join(' ') }} -d '{{ domain['names'] | join(',')}}' || {
+          rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
+        }; {{ domain.get('hook', '') }}
 
     {% else %}
     - name: |
         exec 2>&1
-        /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d '{{ domain['names'] | join(',') }}' \
-        || rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
-        {{ domain.get('hook', '') }}
+        /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['webroot_arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d '{{ domain['names'] | join(',') }}' || {
+          rm -v /etc/letsencrypt/.saltstack/{{ domain['names'][0] }}.list && exit 1
+        }; {{ domain.get('hook', '') }}
 
     {% endif %}
 
