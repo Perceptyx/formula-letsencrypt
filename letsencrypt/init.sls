@@ -25,26 +25,6 @@ letsencrypt_pip-package:
     - require:
       - virtualenv: letsencrypt_virtualenv_/opt/letsencrypt
 
-# Create the dir for the config file (before the first ever run of letsencrypt, its not present)
-letsencrypt_config_directory:
-  file.directory:
-    - name: /etc/letsencrypt
-    - user: root
-    - group: root
-    - mode: 750
-
-# Create the config file
-letsencrypt_config:
-  file.managed:
-    - name: /etc/letsencrypt/cli.ini
-    - source: salt://letsencrypt/files/cli.ini.jinja2
-    - template: jinja
-    - context:
-        config: {{ letsencrypt['config'] }}
-    - user: root
-    - group: root
-    - mode: 640
-
 
 # Iterate over the defined domains to obtain certificates for
 {% for domain in letsencrypt['domains'] %}
