@@ -49,16 +49,17 @@ salt 'webserver' state.sls letsencrypt
 
 It will take care of the magic for you. Dont forget to add hooks in the pillar files if you need any.
 
-Hint: If you have 10 domains on your webserver and you only want to reload nginx once, specify pillars like so:
+Hint: If you have 10 domains that you for some reason dont want to have in one certificate via
+      Subject Alternative Names and you only want to reload nginx once, specify pillars like so:
 
 ```
 letsencrypt:
-  domains:
-    - name: example.com
-    - name: web.example.com
-    - name: mail.example.com
-    [...]
-    - name: foobar.exmaple.com
+    - names:
+        - ftp.example.org
+    - names:
+        - balloning.example.org
+    - names:
+        - something.example.org
       hook: service nginx restart
 ```
 
