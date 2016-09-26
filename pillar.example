@@ -66,10 +66,9 @@ letsencrypt:
   # --webroot or --standalone will be used depending on the choices in the "pack", so do not define it here! These settings
   # are used for ALL "packs" defined.
   config:
-    email: monitoring+blunix@blunix.org
+    email: monitoring@example.com
     server: https://acme-v01.api.letsencrypt.org/directory
     renew-by-default: 'True'
     agree-tos: 'True'
     no-self-upgrade: 'True'
     non-interactive: 'True'
-
