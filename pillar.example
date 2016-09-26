@@ -50,7 +50,6 @@ letsencrypt:
 {% endif %}
 
 
-
   # This formula checks a port before it determines wether to use --webroot or --standalone
   # (If no webserver is running, we cant use --webroot)
   check_port: 80
@@ -59,8 +58,6 @@ letsencrypt:
   # There are examples for nginx and apache2 webserver in the contrib directory of this repository.
   # The formula will assure the existance of this path
   webroot-path: /var/www/letsencrypt
-
-
 
   # Each "pack" of domains in the list pillar:letsencrypt:certificates will get a config file /etc/letsencrypt/saltstack/
   # --webroot or --standalone will be used depending on the choices in the "pack", so do not define it here! These settings
