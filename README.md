@@ -27,9 +27,11 @@ server {
     }
 
     # Letsencrypts location, refer to:
-    # https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04
-    location ~ /.well-known {
+    location /.well-known {
+        auth_basic off;
         allow all;
+        index index.html;
+        root /var/www/letsencrypt;
     }
 }
 ```
@@ -48,19 +50,3 @@ salt 'webserver' state.sls letsencrypt
 ```
 
 It will take care of the magic for you. Dont forget to add hooks in the pillar files if you need any.
-
-Hint: If you have 10 domains that you for some reason dont want to have in one certificate via
-      Subject Alternative Names and you only want to reload nginx once, specify pillars like so:
-
-```
-letsencrypt:
-    - names:
-        - ftp.example.org
-    - names:
-        - balloning.example.org
-    - names:
-        - something.example.org
-      hook: service nginx restart
-```
-
-It will then process the domains in order and execute the hook at last.
