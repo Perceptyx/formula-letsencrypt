@@ -52,13 +52,6 @@ server {
 }
 ```
 
-If you feel like nobody should see this, or you dont want to server an error in that location,
-you can create `/var/www/letsencrypt/.well-known/index.html` with the following content:
-
-```
-<meta http-equiv="refresh" content="0; url=https://www.blunix.org/" />
-```
-
 
 ## Contributions
 
