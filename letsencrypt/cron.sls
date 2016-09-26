@@ -1,25 +1,32 @@
-{% set letsencrypt = salt['pillar.get']('letsencrypt') %}
+##
+## Install a cronjob that renews the letsencrypt certificates every two month
+##
 
 include:
-  - letsencrypt.package
+  - letsencrypt.packages
   - letsencrypt.management
+
+{% set letsencrypt = salt['pillar.get']('letsencrypt') %}
 
 
 # Iterate over the defined domains to request certificates for
-{% for domain in letsencrypt['domains'] %}
+{% for pack in letsencrypt['certificates'] %}
 
-# Create cronjobs to renew all present domains every 60 days at the first of the month
-letsencrypt_cronjob_{{ domain['names'][0] }}:
+# Create cronjobs to renew all present domains every 60 days at the first of the month at 0 hours { loop.index } minutes
+letsencrypt_cron_{{ pack['domains'][0] }}:
   cron.present:
-    # If webroot is not defined for this domain, we can use standalone
-    {% if domain['webroot'] is defined %}
-    - name: exec 2>&1; /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['webroot_arguments'] | join(' ') }} --webroot -w {{ domain['webroot'] }} -d '{{ domain['names'] | join(',') }}' && {{ domain.get('hook', '') }}
 
+    # Check if this pack has a webroot set to True - if so, use the defined webroot for letsencrypt, otherwise use standalone
+    {% if pack.get('webroot', False) %}
+    - name: "/opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt/letsencrypt.log 2>&1 && {{ pack.get('hook', 'exit $?') }} >> /var/log/letsencrypt/letsencrypt.log 2>&1"
+
+    # If webroot is set to False for this pack, use standalone
     {% else %}
-    - name: exec 2>&1; /opt/letsencrypt/bin/letsencrypt {{ letsencrypt['standalone_arguments'] | join(' ') }} -d '{{ domain['names'] | join(',')}}' && {{ domain.get('hook', '') }}
+    - name: "/opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt/letsencrypt.log 2>&1 && {{ pack.get('hook', 'exit $?') }} >> /var/log/letsencrypt/letsencrypt.log 2>&1"
 
     {% endif %}
-    - identifier: Renew all letsencrypt certificates for {{ domain['names'][0] }}
+
+    - identifier: Renew all letsencrypt certificates for {{ pack['domains'][0] }}
     - month: '1,3,5,7,9,11'
     - daymonth: 1
     - hour: 0
@@ -27,7 +34,7 @@ letsencrypt_cronjob_{{ domain['names'][0] }}:
     # If standalone is used, only one process can listen on the used port
     - minute: {{ loop.index }}
     - require:
-      - pip: letsencrypt_pip-package
-      - cmd: letsencrypt_initial-request_{{ domain['names'][0] }}
+      - pip: letsencrypt_packages_pip-package
+      - cmd: letsencrypt_management_initial-request_{{ pack['domains'][0] }}
 
 {% endfor %}
