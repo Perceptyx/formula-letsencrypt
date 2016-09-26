@@ -71,6 +71,6 @@ Support for this Formula, letsencrypt and Saltstack is available at:
 
 Blunix GmbH - Professional Linux Service
 
-[www.blunix.org](https://www.blunix.org){:target="_blank"}
+Web: <a href="https://www.blunix.org" target="_blank">www.blunix.org</a>
 
-<mailto:service@blunix.org>
+Email: <mailto:service@blunix.org>
