@@ -35,6 +35,6 @@ letsencrypt_cron_{{ pack['domains'][0] }}:
     - minute: {{ loop.index }}
     - require:
       - pip: letsencrypt_packages_pip-package
-      - cmd: letsencrypt_management_initial-request_{{ pack['domains'][0] }}
+      - cmd: letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}
 
 {% endfor %}
