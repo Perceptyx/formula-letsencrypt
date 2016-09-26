@@ -61,15 +61,21 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 # Also we dont want to renew all domains when we add one additional domain (as we can only request a specific
 # domain for five times within a week or so
 #}
-letsencrypt_management_initial-request_{{ pack['domains'][0] }}:
+
+# Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
+# lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
+{% set check_port_status = salt['cmd.run']('lsof -i :' + letsencrypt['check_port'] | string + ' 2>&1 > /dev/null; echo $?' | string ) %}
+
+# Is the certificate already present?
+{% set check_file_state = salt['cmd.run']('test -L /etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem; echo $?' | string ) %}
+
+
+
+letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
   cmd.wait:
     - user: root
     - group: root
     - shell: /bin/bash
-
-    # Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
-    # lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
-    {% set check_port_status = salt['cmd.run']('lsof -i :' + letsencrypt['check_port'] | string + ' 2>&1 > /dev/null; echo $?') %}
 
     # Check the exit status of lsof - if its not 0, there is no service listening on { letsencrypt['check_port'] }
     # If the port is not used, we can always just use standalone to initial request / refresh on updates of domains.
@@ -77,13 +83,32 @@ letsencrypt_management_initial-request_{{ pack['domains'][0] }}:
     # If anything goes wrong, update the list of domains file so this state would run again on the next salt run.
     - name: |
         exec 2>&1
-        {% if check_port_status != '0' %}
+
+        {% if check_file_state != '0' and check_port_status != '0' %}
+        # initial - no cert -> no webserver -> --standalone, no hook
         /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-        {%- else -%}
+            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        };
+
+        {% elif check_file_state == '0' and check_port_status != '0' %}
+        # renew - cert present -> no webserver -> --standalone, run hook (as it could be a ftp server without webserver)
         /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-        {%- endif %}
-          echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         }; {{ pack.get('hook', '') }}
+
+        {% elif check_file_state == '0' and check_port_status == '0' %}
+        # renew - cert present -> a webserver -> --webroot, run hook
+        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
+            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        }; {{ pack.get('hook', '') }}
+
+        {% else %}
+        # renew - no cert  -> (however strangely already) a webserver -> --webroot, run hook
+        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
+            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        }; {{ pack.get('hook', '') }}
+
+        {%- endif %}
 
 
     # We want this command to run, if:
