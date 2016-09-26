@@ -1,6 +1,7 @@
 # Saltstack letsencrypt Formula
 
 
+
 ## Features
 
   - Installs Letsencrypt's Certbot as python pip package
@@ -10,6 +11,7 @@
   - Adds the ability to execute hook scripts (BASH commands) after renewal, like service nginx reload
   - Logs everything to /var/log/letsencrypt/letsencrypt.log
   - Is quite well documented
+
 
 
 ## Usage
@@ -30,26 +32,23 @@ Some time later you may want to add further Subject Alternative Names in the pil
 ```
 
 The formula will detect that you changed the amount of domains and will execute the certbot executuable to get the new domains.
-It will also detect when it is appropriate to run the hook script or not.
+It will also detect that nginx is currently running and the files are already present, so it will use --webroot and then
+execute the defined hook script.
 
 
-## Required preperations for --webroot and apache / nginx
+
+## Required preperations for usage with apache / nginx / a webserver
 
 This formula will create the webroot directory for you. However you have to prepare your webserver to use include the letsencrypt
 location .well-known/acme-challange by including the configurations shipped with this repository in the contrib directory.
 
 ```
-root@example.com ~ # cat /etc/nginx/sites-enabled/www.example.com.conf
+root@www.example.com ~ # cat /etc/nginx/sites-enabled/www.example.com.conf
 server {
     listen 80 default_server;
     server_name www.example.com _;
-    root /var/www/example.com;
-    index index.html;
-
-
-    # more of your config
+    # [...] more of your config here
     include /etc/nginx/conf.d/letsencrypt-renewal.conf
-
 }
 ```
 
@@ -67,9 +66,10 @@ Contributions, bug reports and pull requests are very welcome! Preferably file a
 
 
 
-## Supported operating Systems
+## Supported Operating Systems
 
 This formula was developed and tested on debian 8 and ubuntu 14.04 Systems.
+
 
 
 ## Enterprise Support
@@ -78,6 +78,6 @@ Support for this Formula, letsencrypt and Saltstack is available at:
 
 Blunix GmbH - Professional Linux Service
 
-https://www.blunix.org
+[www.blunix.org](https://www.blunix.org)
 
 <mailto:service@blunix.org>
