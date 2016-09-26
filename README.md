@@ -1,50 +1,52 @@
 # Formula: Letsencrypt
-This formula installs Letsencrypt's Certbot.
+
+This formula:
+  - installs Letsencrypt's Certbot as python pip package
+  - uses a webservers webroot instead of the temporary webserver (nginx default vhost example included)
+  - takes care of initial creation of certificates if they have never been requested before
+  - creates a cronjob that renews the certificates every two month
+  - adds the ability to execute hook scripts (BASH commands) after renewal
+
 
 # Usage
-Using this formula is done in whatever formula certificates need to be
-deployed - such as nginx, apache or similar.
 
-Create an ssl.sls that does something similar to the following:
+First prepare your webserver for letsencrypt. Modify your default vhost like follows:
 
 ```
-include:
-  - letsencrypt
+root@example.com ~ # cat /etc/nginx/sites-enabled/default 
+server {
+    listen 80 default_server;
+    server_name _;
+ 
+    root /var/www/letsencrypt;
+    index index.html;
 
-...
-deploy http vhosts that rewrite everything except the letsencrypt
-validation URL patterns to https. This is required for the --webroot
-method of certbot to function properly!
-...
+    # Redirect everything to our default domain
+    location / {
+        return 301 https://www.blunix.org$request_uri;
+    }
 
-nginx_ssl_{{ site_name }}:
-  file.managed:
-    - source: {{ ssl_vhost_source }}
-    - require:
-      - pkg: nginx
-      - cmd: nginx_ssl_{{ site_name }}_issue
-    - watch_in:
-      - service: nginx
+    # Letsencrypts location, refer to:
+    location /.well-known {
+        auth_basic off;
+        allow all;
+        index index.html;
+        root /var/www/letsencrypt;
+    }
+}
+```
 
-nginx_ssl_{{ site_name }}_issue:
-  cmd.run:
-    - name: >
-             /opt/letsencrypt/bin/letsencrypt certonly --webroot
-             -w {{ site_root }} -d {{ domain }} -d {{ alt_domain }}
-    - creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
-    - require:
-      - pip: letsencrypt
-
-nginx_ssl_{{ site_name }}_renew:
-  cron.present:
-    - name: >
-             /opt/letsencrypt/bin/letsencrypt certonly --webroot --renew
-             -w {{ site_root }} -d {{ domain }} -d {{ alt_domain }}
-    - identifier: renew-cert-for-{{ site_name }}
-    - daymonth: 23
-    - hour: 11
-    - minute: 11
-    - require:
-      - cmd: nginx_ssl{{ site_name}}_issue
+If you feel like nobody should see this, or you dont want to server an error in that location,
+you can create `/var/www/letsencrypt/.well-known/index.html` with the following content:
 
 ```
+<meta http-equiv="refresh" content="0; url=https://www.blunix.org/" />
+```
+
+When this is done, just run:
+
+```
+salt 'webserver' state.sls letsencrypt
+```
+
+It will take care of the magic for you. Dont forget to add hooks in the pillar files if you need any.

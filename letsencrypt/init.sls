@@ -1,2 +1,4 @@
 include:
-  - letsencrypt.install
+  - letsencrypt.packages
+  - letsencrypt.management
+  - letsencrypt.cron
