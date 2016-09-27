@@ -12,7 +12,9 @@ letsencrypt_management_config_saltstack-directory:
     - mode: 750
     - makedirs: True
 
-{% if letsencrypt['webroot'] is defined %}
+
+{% if letsencrypt['webroot-path'] is defined %}
+
 # Create the webroot for the webserver to use
 letsencrypt_management_webroot-directory_{{ letsencrypt['webroot-path'] }}/.well-known:
   file.directory:
@@ -21,6 +23,7 @@ letsencrypt_management_webroot-directory_{{ letsencrypt['webroot-path'] }}/.well
     - group: root
     - mode: 755
     - makedirs: True
+
 {% endif %}
 
 
@@ -117,6 +120,8 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
     #   - The previous request failed (echo '# previous request unsuccessful' >> .conf would be executed)
     - watch:
       - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
+
+    - creates: /etc/letsencrypt/live/{{ pack['domains'][0] }}/privkey.pem
 
     - require:
       - pip: letsencrypt_packages_pip-package
