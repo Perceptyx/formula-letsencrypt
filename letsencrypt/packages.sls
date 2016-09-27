@@ -10,6 +10,11 @@ letsencrypt_packages_apt:
       # We need this package to install the pip package "certbot"
       - libssl-dev
 
+# Install virtualenv
+letsencrypt_packages_pip_virtualenv:
+  pip.installed:
+    - name: virtualenv
+
 # Create a virtualenv for letsencrypt
 letsencrypt_packages_virtualenv_/opt/letsencrypt:
   virtualenv.managed:
