@@ -3,6 +3,7 @@ letsencrypt_packages_apt:
   pkg.installed:
     - pkgs:
       - libffi-dev
+      - python-dev
       # We need python-pip to be able to use to pip.installed saltstack state module
       - python-pip
       # We need lsof to solve the chicken-egg problem when requesting the first certificate when there is no webserver yet
