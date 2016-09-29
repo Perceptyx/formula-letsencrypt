@@ -72,10 +72,15 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 # Is the certificate already present?
 {% set check_file_state = salt['cmd.run']('test -L /etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem; echo $?' | string ) %}
 
+% if check_file_state == '0' %}
+    {% set req_action = 'wait' %}
+{% else %}
+    {% set req_action = 'run' %}
+{% endif %}
 
 
 letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
-  cmd.wait:
+  cmd.{{ req_action }}:
     - user: root
     - group: root
     - shell: /bin/bash
