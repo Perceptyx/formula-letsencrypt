@@ -72,7 +72,7 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 # Is the certificate already present?
 {% set check_file_state = salt['cmd.run']('test -L /etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem; echo $?' | string ) %}
 
-% if check_file_state == '0' %}
+{% if check_file_state == '0' %}
     {% set req_action = 'wait' %}
 {% else %}
     {% set req_action = 'run' %}
@@ -116,19 +116,19 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
             echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         }; {{ pack.get('hook', '') }}
 
-        {%- endif %}
+        {% endif %}
 
 
-    # We want this command to run, if:
-    #   - The certfificate has never been requested before (/etc/letsencrypt/saltstack/{{ pack['domains'][0] }} would not exist)
-    #   - The SANs are updated (/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf would be updated too)
+    # We want this command to run, if
+    #   - The certfificate has never been requested before (/etc/letsencrypt/saltstack/{ pack['domains'][0] } would not exist)
+    #   - The SANs are updated (/etc/letsencrypt/saltstack/{ pack['domains'][0] }.conf would be updated too)
     #   - The previous request failed (echo '# previous request unsuccessful' >> .conf would be executed)
     - watch:
       - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
-
     - creates: /etc/letsencrypt/live/{{ pack['domains'][0] }}/privkey.pem
 
     - require:
       - pip: letsencrypt_packages_pip-package
+
 
 {% endfor %}
