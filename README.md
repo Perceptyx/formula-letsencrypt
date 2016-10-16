@@ -48,7 +48,7 @@ server {
     listen 80 default_server;
     server_name www.example.com _;
     # [...] more of your config here
-    include /etc/nginx/conf.d/letsencrypt-renewal.conf
+    include /etc/nginx/conf.d/letsencrypt-renewal.conf;
 }
 ```
 
