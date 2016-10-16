@@ -27,7 +27,7 @@ letsencrypt_cron_{{ pack['domains'][0] }}:
     {% endif %}
 
     - identifier: Renew all letsencrypt certificates for {{ pack['domains'][0] }}
-    - month: '1,3,5,7,9,11'
+    - month: '*/2'
     - daymonth: 1
     - hour: 0
     # Dont run all jobs at the same minute, wait one minute in between each
