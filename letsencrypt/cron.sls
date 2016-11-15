@@ -27,7 +27,7 @@ letsencrypt_cron_script_{{ pack['domains'][0] }}:
     - template: jinja
     - context:
         pack: {{ pack }}
-        'webroot-path': {{ letsencrypt['webroot-path'] }}
+        'webroot_path': {{ letsencrypt['webroot_path'] }}
     - mode: 500
     - user: root
     - root: root

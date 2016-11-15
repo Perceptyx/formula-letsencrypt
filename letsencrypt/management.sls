@@ -13,12 +13,12 @@ letsencrypt_management_config_saltstack-directory:
     - makedirs: True
 
 
-{% if letsencrypt['webroot-path'] is defined %}
+{% if letsencrypt['webroot_path'] is defined %}
 
 # Create the webroot for the webserver to use
-letsencrypt_management_webroot-directory_{{ letsencrypt['webroot-path'] }}/.well-known:
+letsencrypt_management_webroot-directory_{{ letsencrypt['webroot_path'] }}/.well-known:
   file.directory:
-    - name: {{ letsencrypt['webroot-path'] }}/.well-known
+    - name: {{ letsencrypt['webroot_path'] }}/.well-known
     - user: root
     - group: root
     - mode: 755
@@ -102,7 +102,7 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
         # Something runs on port 80 and webroot is True, use --webroot
         date | tee -a /var/log/letsencrypt.log
         {{ pre_hook }} | tee -a /var/log/letsencrypt.log && \
-            /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+            /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot_path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
                 echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
         {{ post_hook }};
