@@ -35,6 +35,7 @@ letsencrypt_cron_script_{{ pack['domains'][0] }}:
 # Create cronjobs to renew all present domains every 60 days at the first of the month at 0 hours { loop.index } minutes
 letsencrypt_cron_job_{{ pack['domains'][0] }}:
   cron.present:
+    - name: /etc/letsencrypt/saltstack/cronjobs/{{ pack['domains'][0] }}.sh
     - identifier: Renew all letsencrypt certificates for {{ pack['domains'][0] }}
     - month: '*/2'
     - daymonth: 1
