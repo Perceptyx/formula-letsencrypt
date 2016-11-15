@@ -8,24 +8,33 @@ include:
 
 {% set letsencrypt = salt['pillar.get']('letsencrypt') %}
 
+letsencrypt_cron_cronjob-directory:
+  file.directory:
+    - name: /etc/letsencrypt/saltstack/cronjobs/
+    - user: root
+    - group: root
+    - mode: 700
+
 
 # Iterate over the defined domains to request certificates for
 {% for pack in letsencrypt['certificates'] %}
 
+# Create a script for the cronjob
+letsencrypt_cron_script_{{ pack['domains'][0] }}:
+  file.managed:
+    - name: /etc/letsencrypt/saltstack/cronjobs/{{ pack['domains'][0] }}.sh
+    - source: salt://letsencrypt/files/cronjob.sh.jinja2
+    - template: jinja
+    - context:
+        pack: {{ pack }}
+        'webroot-path': {{ letsencrypt['webroot-path'] }}
+    - mode: 500
+    - user: root
+    - root: root
+
 # Create cronjobs to renew all present domains every 60 days at the first of the month at 0 hours { loop.index } minutes
-letsencrypt_cron_{{ pack['domains'][0] }}:
+letsencrypt_cron_job_{{ pack['domains'][0] }}:
   cron.present:
-
-    # Check if this pack has a webroot set to True - if so, use the defined webroot for letsencrypt, otherwise use standalone
-    {% if pack.get('webroot', False) %}
-    - name: "/opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt/letsencrypt.log 2>&1 && {{ pack.get('hook', 'exit $?') }} >> /var/log/letsencrypt/letsencrypt.log 2>&1"
-
-    # If webroot is set to False for this pack, use standalone
-    {% else %}
-    - name: "/opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt/letsencrypt.log 2>&1 && {{ pack.get('hook', 'exit $?') }} >> /var/log/letsencrypt/letsencrypt.log 2>&1"
-
-    {% endif %}
-
     - identifier: Renew all letsencrypt certificates for {{ pack['domains'][0] }}
     - month: '*/2'
     - daymonth: 1

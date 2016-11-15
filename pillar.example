@@ -31,14 +31,15 @@ letsencrypt:
       # If so, it will use --webroot, if no webserver is running it will use --standalone automatically
       webroot: True
 
-      # This shell command will be executed after the certificate has been requested or renewed
-      hook: echo testhook
+      # This shell command will be executed before / after the certificate has been requested or renewed
+      pre_hook: echo test pre_hook
+      post_hook: echo test post_hook
 
     - domains:
       - www.example.com
       - example.com
       webroot: True
-      hook: service apache2 reload
+      post_hook: service apache2 reload
 
 {% if 'ftp' in grains['id'] %}
     - domains:
@@ -46,7 +47,7 @@ letsencrypt:
       - ftp.example.com
       # Note that the both the initial request and the cronjob will use --standalone
       webroot: False
-      hook: service vsftpd restart
+      post_hook: service vsftpd restart
 {% endif %}
 
 

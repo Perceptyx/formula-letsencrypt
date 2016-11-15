@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Letsencrypt renewal cronjob
+# THIS FILE IS MANAGED BY SALTSTACK AT {{ source }}
+
+exec 2>&1
+
+{%- set webroot = pack.get('webroot', False) -%}
+{%- set pre_hook = pack.get('pre_hook', 'echo no pre hook defined') -%}
+{%- set post_hook = pack.get('post_hook', 'echo no post hook defined') -%}
+
+
+{%- if webroot %}
+
+date >> /var/log/letsencrypt.log
+{{ pre_hook }} >> /var/log/letsencrypt.log && \
+    /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ webroot-path }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
+{{ post_hook }} >> /var/log/letsencrypt.log
+
+
+{%- else %}
+
+date >> /var/log/letsencrypt.log
+{{ pre_hook }} >> /var/log/letsencrypt.log && \
+    /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
+{{ post_hook }} >> /var/log/letsencrypt.log
+
+{% endif %}
+
+
+exit $?

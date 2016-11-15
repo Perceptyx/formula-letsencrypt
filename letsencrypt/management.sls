@@ -91,30 +91,29 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
     # If anything goes wrong, update the list of domains file so this state would run again on the next salt run.
     - name: |
         exec 2>&1
+        set -x
+        set -e
 
-        {% if check_file_state != '0' and check_port_status != '0' %}
-        # initial - no cert -> no webserver -> --standalone, no hook
-        /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        {%- set webroot = pack.get('webroot', False) -%}
+        {%- set pre_hook = pack.get('pre_hook', '') -%}
+        {%- set post_hook = pack.get('post_hook', '') -%}
+
+        {%- if check_port_status == '0' and webroot == True %}
+        # Something runs on port 80 and webroot is True, use --webroot
+        date | tee -a /var/log/letsencrypt.log
+        {{ pre_hook }} | tee -a /var/log/letsencrypt.log && \
+            /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+                echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
+        {{ post_hook }};
 
-        {% elif check_file_state == '0' and check_port_status != '0' %}
-        # renew - cert present -> no webserver -> --standalone, run hook (as it could be a ftp server without webserver)
-        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
-        }; {{ pack.get('hook', '') }}
-
-        {% elif check_file_state == '0' and check_port_status == '0' %}
-        # renew - cert present -> a webserver -> --webroot, run hook
-        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
-        }; {{ pack.get('hook', '') }}
-
-        {% else %}
-        # renew - no cert  -> (however strangely already) a webserver -> --webroot, run hook
-        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot-path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf || {
-            echo '# previous request unsuccessful' >> /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
-        }; {{ pack.get('hook', '') }}
+        {%- else %}
+        # Nothing runs on port 80 or something runs on port 80 and webroot=False - use hooks and --standalone
+        {{ pre_hook }} | tee -a /var/log/letsencrypt.log && \
+            /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+                echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        };
+        {{ post_hook }};
 
         {% endif %}
 
@@ -122,9 +121,10 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
     # We want this command to run, if
     #   - The certfificate has never been requested before (/etc/letsencrypt/saltstack/{ pack['domains'][0] } would not exist)
     #   - The SANs are updated (/etc/letsencrypt/saltstack/{ pack['domains'][0] }.conf would be updated too)
-    #   - The previous request failed (echo '# previous request unsuccessful' >> .conf would be executed)
+    #   - The previous request failed (echo '# previous request unsuccessful' | tee -a .conf would be executed)
     - watch:
       - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
+
     - creates: /etc/letsencrypt/live/{{ pack['domains'][0] }}/privkey.pem
 
     - require:
