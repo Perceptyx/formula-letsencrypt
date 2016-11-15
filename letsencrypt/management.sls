@@ -125,8 +125,6 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
     - watch:
       - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
 
-    - creates: /etc/letsencrypt/live/{{ pack['domains'][0] }}/privkey.pem
-
     - require:
       - pip: letsencrypt_packages_pip-package
 
