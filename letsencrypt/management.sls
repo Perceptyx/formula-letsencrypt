@@ -95,8 +95,8 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
         set -e
 
         {%- set webroot = pack.get('webroot', False) -%}
-        {%- set pre_hook = pack.get('pre_hook', '') -%}
-        {%- set post_hook = pack.get('post_hook', '') -%}
+        {%- set pre_hook = pack.get('pre_hook', 'echo no pre_hook defined') -%}
+        {%- set post_hook = pack.get('post_hook', 'echo no post_hook defined') -%}
 
         {%- if check_port_status == '0' and webroot == True %}
         # Something runs on port 80 and webroot is True, use --webroot
