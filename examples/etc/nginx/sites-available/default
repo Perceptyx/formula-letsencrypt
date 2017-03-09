@@ -1,0 +1,17 @@
+server {
+
+    server_name _;
+    listen 80 default_server;
+
+    location /.well-known {
+        auth_basic off;
+        allow all;
+        index wedontneednoindex.html;
+        root /var/www/letsencrypt;
+    }
+
+    location / {
+        return      301 https://google.com;
+    }
+
+}
