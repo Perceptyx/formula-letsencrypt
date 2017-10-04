@@ -1,3 +1,5 @@
+{%- from "letsencrypt/map.jinja" import letsencrypt with context %}
+
 ##
 ## Install a cronjob that renews the letsencrypt certificates every two month
 ##
@@ -6,13 +8,11 @@ include:
   - letsencrypt.packages
   - letsencrypt.management
 
-{% set letsencrypt = salt['pillar.get']('letsencrypt') %}
-
 letsencrypt_cron_cronjob-directory:
   file.directory:
     - name: /etc/letsencrypt/saltstack/cronjobs/
     - user: root
-    - group: root
+    - group: {{ letsencrypt.group }}
     - mode: 700
 
 

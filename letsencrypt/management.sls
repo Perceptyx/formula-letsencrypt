@@ -1,4 +1,4 @@
-{% set letsencrypt = salt['pillar.get']('letsencrypt') %}
+{%- from "letsencrypt/map.jinja" import letsencrypt with context %}
 
 include:
   - letsencrypt.packages
@@ -8,7 +8,7 @@ letsencrypt_management_config_saltstack-directory:
   file.directory:
     - name: /etc/letsencrypt/saltstack/changes
     - user: root
-    - group: root
+    - group: {{ letsencrypt.group }}
     - mode: 750
     - makedirs: True
 
@@ -20,7 +20,7 @@ letsencrypt_management_webroot-directory_{{ letsencrypt['webroot_path'] }}/.well
   file.directory:
     - name: {{ letsencrypt['webroot_path'] }}/.well-known
     - user: root
-    - group: root
+    - group: {{ letsencrypt.group }}
     - mode: 755
     - makedirs: True
 
@@ -35,7 +35,7 @@ letsencrypt_management_config_/etc/letsencrypt/saltstack/{{ pack['domains'][0] }
   file.managed:
     - name: /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf
     - user: root
-    - group: root
+    - group: {{ letsencrypt.group }}
     - mode: 400
     - contents: |
         # This file is managed by Saltstack, DO NOT EDIT IT!
@@ -49,7 +49,7 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
   file.managed:
     - name: /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
     - user: root
-    - group: root
+    - group: {{ letsencrypt.group }}
     - mode: 400
     - contents: |
         # This file is managed by Saltstack, DO NOT EDIT IT!
@@ -67,7 +67,11 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 
 # Solve the chicken - egg problem: if there is nothing running on port 80, using webroot can not work
 # lsof -i :{ letsencrypt['check_port'] } will return exit status 0 if sth is listening and != zero if not
+{% if salt['grains.get']('os_family') == 'FreeBSD' %}
+{% set check_port_status = salt['cmd.run']('sockstat -l4 -p' + letsencrypt['check_port'] | string + ' grep ' + letsencrypt['check_port'] | string + ' 2>&1 > /dev/null; echo $?' | string ) %}
+{% elif salt['grains.get']('os_family') == 'Debian' %}
 {% set check_port_status = salt['cmd.run']('lsof -i :' + letsencrypt['check_port'] | string + ' 2>&1 > /dev/null; echo $?' | string ) %}
+{% endif %}
 
 # Is the certificate already present?
 {% set check_file_state = salt['cmd.run']('test -L /etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem; echo $?' | string ) %}
@@ -82,8 +86,8 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
   cmd.{{ req_action }}:
     - user: root
-    - group: root
-    - shell: /bin/bash
+    - group: {{ letsencrypt.group }}
+    - shell: /bin/sh
 
     # Check the exit status of lsof - if its not 0, there is no service listening on { letsencrypt['check_port'] }
     # If the port is not used, we can always just use standalone to initial request / refresh on updates of domains.
@@ -116,7 +120,6 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
         {{ post_hook }};
 
         {% endif %}
-
 
     # We want this command to run, if
     #   - The certfificate has never been requested before (/etc/letsencrypt/saltstack/{ pack['domains'][0] } would not exist)
