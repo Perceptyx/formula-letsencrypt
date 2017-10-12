@@ -5,7 +5,7 @@
 # - You can create a maximum of 500 Registrations per IP Address per 3 hours
 # - We also have a Duplicate Certificate limit of 5 certificates per week. A certificate is considered a duplicate of an earlier
 #   certificate if they contain the exact same set of hostnames, ignoring capitalization and ordering of hostnames. For instance,
-#   if you requested a certificate for the names [www.example.com, example.com], you could request four more certificates for 
+#   if you requested a certificate for the names [www.example.com, example.com], you could request four more certificates for
 #   [www.example.com, example.com] during the week. If you changed the set of names by adding [blog.example.com], you would be
 #   able to request additional certificates.
 

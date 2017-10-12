@@ -1,5 +1,11 @@
 # Install required apt packages
-letsencrypt_packages_apt:
+{% if salt['grains.get']('os_family') == 'FreeBSD' %}
+letsencrypt_packages:
+  pkg.installed:
+    - pkgs:
+      - py27-pip
+{% elif salt['grains.get']('os_family') == 'Debian' %}
+letsencrypt_packages:
   pkg.installed:
     - pkgs:
       - libffi-dev
@@ -10,6 +16,7 @@ letsencrypt_packages_apt:
       - lsof
       # We need this package to install the pip package "certbot"
       - libssl-dev
+{% endif %}
 
 # Install virtualenv
 letsencrypt_packages_pip_virtualenv:
@@ -39,4 +46,3 @@ letsencrypt_packages_pip-package:
     - require:
       - virtualenv: letsencrypt_packages_virtualenv_/opt/letsencrypt
       - pip: letsencrypt_packages_pip-setuptools
-

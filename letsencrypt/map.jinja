@@ -1,0 +1,8 @@
+{% set letsencrypt = salt['grains.filter_by']({
+    'Debian': {
+        'group': 'root'
+    },
+    'FreeBSD': {
+        'group': 'wheel'
+    },
+}, grain='os_family', merge=salt['pillar.get']('letsencrypt'), default='Debian') %}
