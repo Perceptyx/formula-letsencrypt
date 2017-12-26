@@ -42,9 +42,6 @@ letsencrypt_cron_job_{{ pack['domains'][0] }}:
     - daymonth: '{{ letsencrypt.crontab.daymonth }}'
     - month: '{{ letsencrypt.crontab.month }}'
     - dayweek: '{{ letsencrypt.crontab.dayweek }}'
-    # Dont run all jobs at the same minute, wait one minute in between each
-    # If standalone is used, only one process can listen on the used port
-    - minute: {{ loop.index }}
     - require:
       - pip: letsencrypt_packages_pip-package
       - cmd: letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}
