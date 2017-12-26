@@ -70,3 +70,10 @@ letsencrypt:
     agree-tos: 'True'
     no-self-upgrade: 'True'
     non-interactive: 'True'
+
+  crontab:
+    minute: '*'
+    hour: '0'
+    daymonth: '1'
+    month: '*/2'
+    dayweek: '*'

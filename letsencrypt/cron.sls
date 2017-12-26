@@ -37,9 +37,11 @@ letsencrypt_cron_job_{{ pack['domains'][0] }}:
   cron.present:
     - name: /etc/letsencrypt/saltstack/cronjobs/{{ pack['domains'][0] }}.sh
     - identifier: Renew all letsencrypt certificates for {{ pack['domains'][0] }}
-    - month: '*/2'
-    - daymonth: 1
-    - hour: 0
+    - minute: '{{ letsencrypt.crontab.minute }}'
+    - hour: '{{ letsencrypt.crontab.hour }}'
+    - daymonth: '{{ letsencrypt.crontab.daymonth }}'
+    - month: '{{ letsencrypt.crontab.month }}'
+    - dayweek: '{{ letsencrypt.crontab.dayweek }}'
     # Dont run all jobs at the same minute, wait one minute in between each
     # If standalone is used, only one process can listen on the used port
     - minute: {{ loop.index }}
