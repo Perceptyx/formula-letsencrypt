@@ -1,4 +1,6 @@
-{% set letsencrypt = salt['grains.filter_by']({
+{% import_yaml "letsencrypt/defaults.yaml" as default_settings %}
+
+{% set os_family_map = salt['grains.filter_by']({
     'Debian': {
         'group': 'root'
     },
@@ -6,3 +8,13 @@
         'group': 'wheel'
     },
 }, grain='os_family', merge=salt['pillar.get']('letsencrypt'), default='Debian') %}
+
+{% do default_settings.letsencrypt.update(os_family_map) %}
+
+{## Merge in openssh:lookup pillar ##}
+{% set letsencrypt = salt['pillar.get'](
+    'letsencrypt',
+    default=default_settings.letsencrypt,
+    merge=True
+  )
+%}
