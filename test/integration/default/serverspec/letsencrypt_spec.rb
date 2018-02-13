@@ -38,6 +38,6 @@ describe 'letsencrypt' do
   end
 
   describe cron do
-    it { should have_entry('1 0 1 */2 * /etc/letsencrypt/saltstack/cronjobs/something.test.com.sh').with_user('root') }
+    it { should have_entry('1 0 1 */2 * /etc/letsencrypt/saltstack/cronjobs/something.test.com.sh > /dev/null 2>&1').with_user('root') }
   end
 end
