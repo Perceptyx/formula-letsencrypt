@@ -28,7 +28,9 @@ letsencrypt_packages_pip-setuptools:
   pip.installed:
     - name: setuptools
     - upgrade: True
+    - ignore_installed: True
     - bin_env: /opt/letsencrypt
+    - no_cache_dir: True
     - use_vt: True
     - require:
       - virtualenv: letsencrypt_packages_virtualenv_/opt/letsencrypt
