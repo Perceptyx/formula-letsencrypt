@@ -28,15 +28,14 @@ letsencrypt_packages_virtualenv_/opt/letsencrypt:
   virtualenv.managed:
     - name: /opt/letsencrypt
 
-# Install latest version of setuptools, pip install letsencrypt might fail otherwise
+# # Install latest version of setuptools, pip install letsencrypt might fail otherwise
 letsencrypt_packages_pip-setuptools:
   pip.installed:
-    - name: setuptools==38.7.0
+    - name: setuptools
     - upgrade: True
     - ignore_installed: True
     - bin_env: /opt/letsencrypt
     - no_cache_dir: True
-    - use_vt: True
     - require:
       - virtualenv: letsencrypt_packages_virtualenv_/opt/letsencrypt
 
@@ -47,7 +46,6 @@ letsencrypt_packages_pip-package:
     - upgrade: True
     - ignore_installed: True
     - bin_env: /opt/letsencrypt
-    - use_vt: True
     - require:
       - virtualenv: letsencrypt_packages_virtualenv_/opt/letsencrypt
       - pip: letsencrypt_packages_pip-setuptools
