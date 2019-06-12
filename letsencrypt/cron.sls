@@ -26,7 +26,7 @@ letsencrypt_cron_script_{{ pack['domains'][0] }}:
     - source: salt://letsencrypt/files/cronjob.sh.jinja2
     - template: jinja
     - context:
-        pack: {{ pack }}
+        pack: {{ pack|tojson }}
         'webroot_path': {{ letsencrypt['webroot_path'] }}
     - mode: 500
     - user: root
