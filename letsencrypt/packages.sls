@@ -3,7 +3,7 @@
 letsencrypt_packages:
   pkg.installed:
     - pkgs:
-      - py27-pip
+      - py36-pip
 {% elif salt['grains.get']('os_family') == 'Debian' %}
 letsencrypt_packages:
   pkg.installed:
