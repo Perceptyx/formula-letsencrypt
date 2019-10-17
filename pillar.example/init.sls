@@ -65,7 +65,7 @@ letsencrypt:
   # are used for ALL "packs" defined.
   config:
     email: monitoring@example.com
-    server: https://acme-v01.api.letsencrypt.org/directory
+    server: https://acme-v02.api.letsencrypt.org/directory
     renew-by-default: 'True'
     agree-tos: 'True'
     no-self-upgrade: 'True'
