@@ -8,7 +8,7 @@ letsencrypt:
   check_port: 443
   config:
     email: monitoring@example.com
-    server: https://acme-staging.api.letsencrypt.org/directory
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
     renew-by-default: 'True'
     agree-tos: 'True'
     no-self-upgrade: 'True'
