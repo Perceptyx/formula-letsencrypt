@@ -5,24 +5,32 @@ letsencrypt_packages:
     - pkgs:
       - py27-pip
       - py36-pip
-{% elif salt['grains.get']('os_family') == 'Debian' %}
-letsencrypt_packages:
-  pkg.installed:
-    - pkgs:
-      - libffi-dev
-      - python-dev
-      # We need python-pip to be able to use to pip.installed saltstack state module
-      - python-pip
-      # We need lsof to solve the chicken-egg problem when requesting the first certificate when there is no webserver yet
-      - lsof
-      # We need this package to install the pip package "certbot"
-      - libssl-dev
-{% endif %}
 
 # Install virtualenv
 letsencrypt_packages_pip_virtualenv:
   pip.installed:
     - name: virtualenv
+    - bin_env: '/usr/local/bin/pip-3.6'
+    - require:
+      - pkg: letsencrypt_packages
+{% elif salt['grains.get']('os_family') == 'Debian' %}
+letsencrypt_packages:
+  pkg.installed:
+    - pkgs:
+      - libffi-dev
+      - python3-dev
+      # We need python3-pip to be able to use to pip.installed saltstack state module
+      - python3-pip
+      # We need lsof to solve the chicken-egg problem when requesting the first certificate when there is no webserver yet
+      - lsof
+      # We need this package to install the pip package "certbot"
+      - libssl-dev
+
+# Install virtualenv
+letsencrypt_packages_pip_virtualenv:
+  pip.installed:
+    - name: virtualenv
+{% endif %}
 
 # Create a virtualenv for letsencrypt
 letsencrypt_packages_virtualenv_/opt/letsencrypt:

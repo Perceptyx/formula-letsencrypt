@@ -5,23 +5,38 @@ set :backend, :exec
 if os[:family] == 'freebsd'
   pip_package = "py27-pip"
   group       = "wheel"
+
+  describe 'letsencrypt' do
+    it "pip is installed" do
+      expect(package(pip_package)).to be_installed
+    end
+
+    it "virtualenv is installed" do
+      expect(command("pip-3.6 show virtualenv").exit_status).to eql(0)
+    end
+
+    it "setuptools is installed" do
+      expect(command("pip-3.6 show setuptools").exit_status).to eql(0)
+    end
+  end
 elsif ['debian', 'ubuntu'].include?(os[:family])
-  pip_package = "python-pip"
+  pip_package = "python3-pip"
   group      = "root"
+
+  describe 'letsencrypt' do
+    it "pip is installed" do
+      expect(package(pip_package)).to be_installed
+    end
+
+    it "virtualenv is installed" do
+      expect(command("pip3 show virtualenv").exit_status).to eql(0)
+    end
+
+    it "setuptools is installed" do
+      expect(command("pip3 show setuptools").exit_status).to eql(0)
+    end
+  end
 end
-
-describe 'letsencrypt' do
-  it "pip is installed" do
-    expect(package(pip_package)).to be_installed
-  end
-
-  it "virtualenv is installed" do
-    expect(command("pip show virtualenv").exit_status).to eql(0)
-  end
-
-  it "setuptools is installed" do
-    expect(command("pip show setuptools").exit_status).to eql(0)
-  end
 
   describe file('/opt/letsencrypt') do
     it { should be_directory }
@@ -40,4 +55,3 @@ describe 'letsencrypt' do
   describe cron do
     it { should have_entry('1 0 1 */2 * /etc/letsencrypt/saltstack/cronjobs/something.test.com.sh > /dev/null 2>&1').with_user('root') }
   end
-end
