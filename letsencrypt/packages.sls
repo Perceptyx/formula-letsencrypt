@@ -10,7 +10,7 @@ letsencrypt_packages:
 letsencrypt_packages_pip_virtualenv:
   pip.installed:
     - name: virtualenv
-    - bin_env: '/usr/local/bin/pip-3.6'
+    - bin_env: '/usr/local/bin/pip-3.7'
     - require:
       - pkg: letsencrypt_packages
 {% elif salt['grains.get']('os_family') == 'Debian' %}
