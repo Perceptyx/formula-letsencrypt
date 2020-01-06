@@ -12,11 +12,11 @@ if os[:family] == 'freebsd'
     end
 
     it "virtualenv is installed" do
-      expect(command("pip-3.6 show virtualenv").exit_status).to eql(0)
+      expect(command("pip-3.7 show virtualenv").exit_status).to eql(0)
     end
 
     it "setuptools is installed" do
-      expect(command("pip-3.6 show setuptools").exit_status).to eql(0)
+      expect(command("pip-3.7 show setuptools").exit_status).to eql(0)
     end
   end
 elsif ['debian', 'ubuntu'].include?(os[:family])
