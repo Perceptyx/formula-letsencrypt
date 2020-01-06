@@ -4,7 +4,7 @@ letsencrypt_packages:
   pkg.installed:
     - pkgs:
       - py27-pip
-      - py36-pip
+      - py37-pip
 
 # Install virtualenv
 letsencrypt_packages_pip_virtualenv:
