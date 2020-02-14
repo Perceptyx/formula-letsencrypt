@@ -3,16 +3,9 @@
 letsencrypt_packages:
   pkg.installed:
     - pkgs:
-      - py27-pip
       - py37-pip
+      - py37-virtualenv
 
-# Install virtualenv
-letsencrypt_packages_pip_virtualenv:
-  pip.installed:
-    - name: virtualenv
-    - bin_env: '/usr/local/bin/pip-3.7'
-    - require:
-      - pkg: letsencrypt_packages
 {% elif salt['grains.get']('os_family') == 'Debian' %}
 letsencrypt_packages:
   pkg.installed:
@@ -25,11 +18,9 @@ letsencrypt_packages:
       - lsof
       # We need this package to install the pip package "certbot"
       - libssl-dev
+      # Use virtualenv package
+      - python3-virtualenv
 
-# Install virtualenv
-letsencrypt_packages_pip_virtualenv:
-  pip.installed:
-    - name: virtualenv
 {% endif %}
 
 # Create a virtualenv for letsencrypt
