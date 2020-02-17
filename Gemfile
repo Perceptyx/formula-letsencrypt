@@ -6,3 +6,4 @@ gem "test-kitchen"
 gem "kitchen-salt", :git => 'https://github.com/Perceptyx/kitchen-salt.git'
 gem 'kitchen-inspec'
 gem "kitchen-vagrant"
+gem "kitchen-docker"
