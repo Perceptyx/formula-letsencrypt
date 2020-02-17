@@ -37,6 +37,7 @@ platforms:
   - name: freebsd-11.3
     driver:
       name: vagrant
+      use_sudo: true
       hostname: letsencrypt.ci.local
       cache_directory: false
 
