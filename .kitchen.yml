@@ -37,6 +37,9 @@ platforms:
   - name: freebsd-11.3
     driver:
       name: vagrant
+      box: roboxes/freebsd11
+      customize:
+        memory: 1024
       use_sudo: true
       hostname: letsencrypt.ci.local
       cache_directory: false
