@@ -20,4 +20,4 @@ jobs:
           sudo dpkg -i /tmp/vagrant.deb
           gem install bundler
           bundle install --jobs 4 --retry 3
-          bundle exec kitchen test ${TESTSUITE}
+          bundle exec kitchen test
