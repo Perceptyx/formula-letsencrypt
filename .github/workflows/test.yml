@@ -21,11 +21,6 @@ jobs:
           sudo apt-get install -yq libvirt-dev libvirt-bin libvirt-daemon libvirt-clients
           sudo systemctl start libvirtd.service
           vagrant plugin install vagrant-libvirt
-          sudo ls -l /var/run/libvirt/
-          sudo usermod -G libvirt $(whoami)
-          newgrp libvirt
-          echo "====> This are my groups:"
-          groups
           gem install bundler
           bundle config set with 'actions'
           bundle install --jobs 4 --retry 3
