@@ -19,6 +19,7 @@ jobs:
           curl https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb -o /tmp/vagrant.deb
           sudo dpkg -i /tmp/vagrant.deb
           sudo apt-get install -yq libvirt-dev libvirt-bin libvirt-daemon libvirt-clients
-          gem install bundler ruby-libvirt vagrant-libvirt
-          bundle install --jobs 4 --retry 3
+          sudo systemctl start libvirtd.service
+          gem install bundler
+          bundle install --with actions --jobs 4 --retry 3
           bundle exec kitchen test
