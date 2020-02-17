@@ -3,7 +3,7 @@ set :backend, :exec
 
 # Configure OS specific parameters
 if os[:family] == 'freebsd'
-  pip_package = "py27-pip"
+  pip_package = "py37-pip"
   group       = "wheel"
 
   describe 'letsencrypt' do

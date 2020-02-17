@@ -5,9 +5,13 @@ formula_name = formula['name']
 %>
 ---
 
+# For help on this file's format, see https://kitchen.ci/
 driver:
-  name: vagrant
-  hostname: letsencrypt.ci.local
+  name: docker
+  use_sudo: false
+  privileged: true
+  run_command: /lib/systemd/systemd
+
 
 provisioner:
   name: salt_solo
@@ -32,15 +36,17 @@ provisioner:
 platforms:
   - name: freebsd-11.3
     driver:
+      name: vagrant
+      box: generic/freebsd11
+      customize:
+        memory: 1024
+        #use_sudo: true
+      hostname: letsencrypt.ci.local
       cache_directory: false
 
-  - name: ubuntu-16.04
+  - name: ubuntu-1804-2019-2-py3
     driver:
-      box: ubuntu/xenial64
-
-  - name: ubuntu-18.04
-    driver:
-      box: ubuntu/bionic64
+      image: netmanagers/salt-2019.2-py3:ubuntu-18.04
 
 suites:
   - name: default

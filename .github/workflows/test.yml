@@ -1,0 +1,27 @@
+name: Kitchen Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby 2.4
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.4
+      - name: Test using Kitchen.ci
+        env:
+          VAGRANT_VERSION: 2.2.7
+          VAGRANT_DEFAULT_PROVIDER: libvirt
+          TEST_SUITE: default-ubuntu-1804-2019-2-py3
+        run: |
+          curl https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb -o /tmp/vagrant.deb
+          sudo dpkg -i /tmp/vagrant.deb
+          sudo apt-get install -yq libvirt-dev libvirt-bin libvirt-daemon libvirt-clients
+          vagrant plugin install vagrant-libvirt
+          gem install bundler
+          bundle config set with 'actions'
+          bundle install --jobs 4 --retry 3
+          bundle exec kitchen test ${TEST_SUITE}

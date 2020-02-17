@@ -14,12 +14,10 @@ letsencrypt_packages:
       - python3-dev
       # We need python3-pip to be able to use to pip.installed saltstack state module
       - python3-pip
-      # We need lsof to solve the chicken-egg problem when requesting the first certificate when there is no webserver yet
-      - lsof
       # We need this package to install the pip package "certbot"
       - libssl-dev
       # Use virtualenv package
-      - python3-virtualenv
+      - python-virtualenv
 
 {% endif %}
 
@@ -27,6 +25,7 @@ letsencrypt_packages:
 letsencrypt_packages_virtualenv_/opt/letsencrypt:
   virtualenv.managed:
     - name: /opt/letsencrypt
+    - python: python3
 
 # # Install latest version of setuptools, pip install letsencrypt might fail otherwise
 letsencrypt_packages_pip-setuptools:
