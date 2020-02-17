@@ -22,7 +22,10 @@ jobs:
           sudo systemctl start libvirtd.service
           vagrant plugin install vagrant-libvirt
           sudo ls -l /var/run/libvirt/
-          sudo usermod -g libvirt $(whoami)
+          sudo usermod -G libvirt $(whoami)
+          echo "====> This are my groups:"
+          groups
           gem install bundler
-          bundle install --with actions --jobs 4 --retry 3
+          bundle config set with 'actions'
+          bundle install --jobs 4 --retry 3
           bundle exec kitchen test
