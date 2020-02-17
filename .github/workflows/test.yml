@@ -13,10 +13,11 @@ jobs:
           ruby-version: 2.4
       - name: Test using Kitchen.ci
         env:
-          TESTSUITE: default-ubuntu-1804-2019-2-py3
+          VAGRANT_VERSION: 2.2.7
           VAGRANT_DEFAULT_PROVIDER: libvirt
         run: |
-          sudo apt-get install -yq vagrant vagrant-libvirt
-          gem install bundler
+          curl https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb -o /tmp/vagrant.deb
+          sudo dpkg -i /tmp/vagrant.deb
+          gem install bundler ruby-libvirt vagrant-libvirt
           bundle install --jobs 4 --retry 3
           bundle exec kitchen test
