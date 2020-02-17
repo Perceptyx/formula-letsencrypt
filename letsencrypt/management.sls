@@ -71,7 +71,7 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 {% if salt['grains.get']('os_family') == 'FreeBSD' %}
 {% set check_port_status = salt['cmd.retcode']('sockstat -l4 -p ' + letsencrypt['check_port']|string + ' | grep -q ' + letsencrypt['check_port']|string, python_shell=True) %}
 {% elif salt['grains.get']('os_family') == 'Debian' %}
-{% set check_port_status = salt['cmd.retcode']('lsof -i :' + letsencrypt['check_port']|string) %}
+{% set check_port_status = salt['cmd.retcode']('ss -ltn | grep -q ' + letsencrypt['check_port']|string, python_shell=True) %}
 {% endif %}
 
 {# Is the certificate already present? #}
