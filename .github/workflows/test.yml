@@ -23,6 +23,7 @@ jobs:
           vagrant plugin install vagrant-libvirt
           sudo ls -l /var/run/libvirt/
           sudo usermod -G libvirt $(whoami)
+          newgrp libvirt
           echo "====> This are my groups:"
           groups
           gem install bundler
