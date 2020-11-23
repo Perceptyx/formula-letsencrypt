@@ -12,6 +12,9 @@
 # letsencrypt formula pillar data
 letsencrypt:
 
+  # set to true if you want to install OS package instead of creating a python virtualenv
+  use_native_packages: False
+
   # Root level key for a "pack" of domains - an abstraction for a collection of domains for this formula
   certificates:
 

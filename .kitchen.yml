@@ -17,10 +17,9 @@ provisioner:
   name: salt_solo
   salt_bootstrap_url: https://bootstrap.saltstack.com
   salt_install: bootstrap
-  salt_bootstrap_options: -x python3 git v2019.2.0
-  salt_version: '2019.2.0'
-  pillars-from-files:
-    <%= formula_name %>.sls: pillar.example/test.sls
+  salt_bootstrap_options: -x python3 git v2019.2.5
+  salt_version: '2019.2.5'
+  require_chef: false
   pillars:
     top.sls:
       base:
@@ -34,10 +33,10 @@ provisioner:
         - <%= formula_name %>
 
 platforms:
-  - name: freebsd-11.3
+  - name: freebsd-11.4
     driver:
       name: vagrant
-      box: generic/freebsd11
+      box: bento/freebsd-11.4
       customize:
         memory: 1024
         #use_sudo: true
@@ -47,6 +46,31 @@ platforms:
   - name: ubuntu-1804-2019-2-py3
     driver:
       image: netmanagers/salt-2019.2-py3:ubuntu-18.04
+      provision_command:
+        - apt-get update && apt-get install -y cron
+
+verifier:
+  # https://www.inspec.io/
+  name: inspec
+  sudo: true
+  # cli, documentation, html, progress, json, json-min, json-rspec, junit
+  reporter:
+    - cli
 
 suites:
   - name: default
+    provisioner:
+      pillars_from_files:
+        <%= formula_name %>.sls: pillar.example/test.sls
+    verifier:
+      inspec_tests:
+        - path: test/integration/default
+
+
+  - name: native-packages
+    provisioner:
+      pillars_from_files:
+        <%= formula_name %>.sls: pillar.example/native.sls
+    verifier:
+      inspec_tests:
+        - path: test/integration/native

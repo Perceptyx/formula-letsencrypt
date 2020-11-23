@@ -1,4 +1,5 @@
 letsencrypt:
+  use_native_packages: False
   crontab:
     minute: '1'
     hour: '0'

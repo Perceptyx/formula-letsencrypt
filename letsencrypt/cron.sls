@@ -8,6 +8,13 @@ include:
   - letsencrypt.packages
   - letsencrypt.management
 
+{% if salt['pillar.get']('letsencrypt:use_native_packages', False) == True %}
+{% set letsencrypt_cmd = letsencrypt.letsencrypt_cmd %}
+{% else %}
+{% set letsencrypt_cmd = '/opt/letsencrypt/bin/letsencrypt' %}
+{% endif %}
+
+
 letsencrypt_cron_cronjob-directory:
   file.directory:
     - name: /etc/letsencrypt/saltstack/cronjobs/
@@ -28,6 +35,7 @@ letsencrypt_cron_script_{{ pack['domains'][0] }}:
     - context:
         pack: {{ pack|tojson }}
         'webroot_path': {{ letsencrypt['webroot_path'] }}
+        letsencrypt_cmd: {{ letsencrypt_cmd }}
     - mode: 500
     - user: root
     - root: root
@@ -43,7 +51,11 @@ letsencrypt_cron_job_{{ pack['domains'][0] }}:
     - month: '{{ letsencrypt.crontab.month }}'
     - dayweek: '{{ letsencrypt.crontab.dayweek }}'
     - require:
+{% if salt['pillar.get']('letsencrypt:use_native_packages', False) == True %}
+      - pkg: letsencrypt_packages
+{% else %}
       - pip: letsencrypt_packages_pip-package
+{% endif %}
       - cmd: letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}
 
 {% endfor %}

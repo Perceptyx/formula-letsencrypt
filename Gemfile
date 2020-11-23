@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-ruby '~>2.4.1'
+ruby '~>2.6.5'
 
-gem "test-kitchen"
-gem "kitchen-salt", :git => 'https://github.com/Perceptyx/kitchen-salt.git'
+gem "test-kitchen", '>=2.2.4'
+gem "kitchen-salt"
 gem 'kitchen-inspec'
 gem "kitchen-vagrant"
 gem "kitchen-docker"
