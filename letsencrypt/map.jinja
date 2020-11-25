@@ -2,10 +2,14 @@
 
 {% set os_family_map = salt['grains.filter_by']({
     'Debian': {
-        'group': 'root'
+        'group': 'root',
+        'letsencrypt_cmd': '/usr/bin/certbot',
+        'pkg': 'certbot'
     },
     'FreeBSD': {
-        'group': 'wheel'
+        'group': 'wheel',
+        'letsencrypt_cmd': '/usr/local/bin/certbot',
+        'pkg': 'py37-certbot'
     },
 }, grain='os_family', merge=salt['pillar.get']('letsencrypt'), default='Debian') %}
 

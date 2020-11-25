@@ -3,6 +3,12 @@
 include:
   - letsencrypt.packages
 
+{% if salt['pillar.get']('letsencrypt:use_native_packages', False) %}
+{% set letsencrypt_cmd = letsencrypt.letsencrypt_cmd %}
+{% else %}
+{% set letsencrypt_cmd = '/opt/letsencrypt/bin/letsencrypt' %}
+{% endif %}
+
 # Create custom configs in directory just for saltstack
 letsencrypt_management_config_saltstack-directory:
   file.directory:
@@ -107,21 +113,21 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
         # Something runs on port {{ letsencrypt['check_port'] }} and webroot=True, use --webroot plugin
         # Just place files in webroot and server should take care of it, no need for hooks
         date | tee -a /var/log/letsencrypt.log && \
-        /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ letsencrypt['webroot_path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+        {{ letsencrypt_cmd }} certonly --webroot -w {{ letsencrypt['webroot_path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
             echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
 
         {%- elif check_port_status == 0 and webroot == False %}
         # Something runs on port {{ letsencrypt['check_port'] }} and webroot=False, use --standalone plugin with hooks
         {{ pre_hook }} | tee -a /var/log/letsencrypt.log && \
-        /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+        {{ letsencrypt_cmd }} certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
             echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
         {{ post_hook }};
 
         {%- else %}
         # Nothing runs on port {{ letsencrypt['check_port'] }} use --standalone plugin
-        /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+        {{ letsencrypt_cmd }} certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
             echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
 
@@ -135,7 +141,11 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
       - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
 
     - require:
+{% if salt['pillar.get']('letsencrypt:use_native_packages', False) %}
+      - pkg: letsencrypt_packages
+{% else %}
       - pip: letsencrypt_packages_pip-package
+{% endif %}
 
 
 {% endfor %}

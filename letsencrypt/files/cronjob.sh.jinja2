@@ -14,7 +14,7 @@ exec 2>&1
 
 date >> /var/log/letsencrypt.log
 {{ pre_hook }} >> /var/log/letsencrypt.log && \
-    /opt/letsencrypt/bin/letsencrypt certonly --webroot -w {{ webroot_path }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
+  {{ letsencrypt_cmd }} certonly --webroot -w {{ webroot_path }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
 {{ post_hook }} >> /var/log/letsencrypt.log
 
 
@@ -22,7 +22,7 @@ date >> /var/log/letsencrypt.log
 
 date >> /var/log/letsencrypt.log
 {{ pre_hook }} >> /var/log/letsencrypt.log && \
-    /opt/letsencrypt/bin/letsencrypt certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
+  {{ letsencrypt_cmd }} certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf >> /var/log/letsencrypt.log
 {{ post_hook }} >> /var/log/letsencrypt.log
 
 {% endif %}
