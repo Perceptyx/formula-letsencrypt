@@ -3,16 +3,19 @@
 include:
   - letsencrypt.packages
 
+
 {% if salt['pillar.get']('letsencrypt:use_native_packages', False) %}
 {% set letsencrypt_cmd = letsencrypt.letsencrypt_cmd %}
+{% set letsencrypt_prefix = letsencrypt.prefix %}
 {% else %}
 {% set letsencrypt_cmd = '/opt/letsencrypt/bin/letsencrypt' %}
+{% set letsencrypt_prefix = '' %}
 {% endif %}
 
 # Create custom configs in directory just for saltstack
 letsencrypt_management_config_saltstack-directory:
   file.directory:
-    - name: /etc/letsencrypt/saltstack/changes
+    - name: {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes
     - user: root
     - group: {{ letsencrypt.group }}
     - mode: 750
@@ -37,9 +40,9 @@ letsencrypt_management_webroot-directory_{{ letsencrypt['webroot_path'] }}/.well
 {% for pack in letsencrypt['certificates'] %}
 
 # Create a custom config file with the list of all domains and SANs plus some default options for certbot
-letsencrypt_management_config_/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf:
+letsencrypt_management_config_{{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf:
   file.managed:
-    - name: /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf
+    - name: {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf
     - user: root
     - group: {{ letsencrypt.group }}
     - mode: 400
@@ -51,9 +54,9 @@ letsencrypt_management_config_/etc/letsencrypt/saltstack/{{ pack['domains'][0] }
         {%- endfor -%}
 
 {# Create a list of all domains in a file, so we can watch if the domains were updated compared to the previous run #}
-letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}:
+letsencrypt_management_change-file_{{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}:
   file.managed:
-    - name: /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
+    - name: {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
     - user: root
     - group: {{ letsencrypt.group }}
     - mode: 400
@@ -81,7 +84,7 @@ letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['d
 {% endif %}
 
 {# Is the certificate already present? #}
-{% set check_file_state = salt['cmd.retcode']('test -L /etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem') %}
+{% set check_file_state = salt['cmd.retcode']('test -L ' + letsencrypt_prefix + '/etc/letsencrypt/live/' + pack['domains'][0] + '/privkey.pem') %}
 
 {% if check_file_state == '0' %}
     {% set req_action = 'wait' %}
@@ -113,22 +116,22 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
         # Something runs on port {{ letsencrypt['check_port'] }} and webroot=True, use --webroot plugin
         # Just place files in webroot and server should take care of it, no need for hooks
         date | tee -a /var/log/letsencrypt.log && \
-        {{ letsencrypt_cmd }} certonly --webroot -w {{ letsencrypt['webroot_path'] }} -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
-            echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        {{ letsencrypt_cmd }} certonly --webroot -w {{ letsencrypt['webroot_path'] }} -c {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+            echo '# previous request unsuccessful' | tee -a {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
 
         {%- elif check_port_status == 0 and webroot == False %}
         # Something runs on port {{ letsencrypt['check_port'] }} and webroot=False, use --standalone plugin with hooks
         {{ pre_hook }} | tee -a /var/log/letsencrypt.log && \
-        {{ letsencrypt_cmd }} certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
-            echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        {{ letsencrypt_cmd }} certonly --standalone -c {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+            echo '# previous request unsuccessful' | tee -a {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
         {{ post_hook }};
 
         {%- else %}
         # Nothing runs on port {{ letsencrypt['check_port'] }} use --standalone plugin
-        {{ letsencrypt_cmd }} certonly --standalone -c /etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
-            echo '# previous request unsuccessful' | tee -a /etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
+        {{ letsencrypt_cmd }} certonly --standalone -c {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/{{ pack['domains'][0] }}.conf | tee -a /var/log/letsencrypt.log || {
+            echo '# previous request unsuccessful' | tee -a {{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }} && exit 1
         };
 
         {% endif %}
@@ -138,7 +141,7 @@ letsencrypt_management_request-or-renew_{{ pack['domains'][0] }}:
     #   - The SANs are updated (/etc/letsencrypt/saltstack/{ pack['domains'][0] }.conf would be updated too)
     #   - The previous request failed (echo '# previous request unsuccessful' | tee -a .conf would be executed)
     - watch:
-      - file: letsencrypt_management_change-file_/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
+      - file: letsencrypt_management_change-file_{{ letsencrypt_prefix }}/etc/letsencrypt/saltstack/changes/{{ pack['domains'][0] }}
 
     - require:
 {% if salt['pillar.get']('letsencrypt:use_native_packages', False) %}
