@@ -4,12 +4,14 @@
     'Debian': {
         'group': 'root',
         'letsencrypt_cmd': '/usr/bin/certbot',
-        'pkg': 'certbot'
+        'pkg': 'certbot',
+        'prefix': '',
     },
     'FreeBSD': {
         'group': 'wheel',
         'letsencrypt_cmd': '/usr/local/bin/certbot',
-        'pkg': 'py37-certbot'
+        'pkg': 'py37-certbot',
+        'prefix': '/usr/local',
     },
 }, grain='os_family', merge=salt['pillar.get']('letsencrypt'), default='Debian') %}
 
